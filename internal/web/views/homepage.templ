@@ -1,0 +1,27 @@
+package views
+
+import "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+
+templ Homepage(vm viewmodels.Homepage) {
+  <div class="grid u-gap-2">
+    <div class="grid-c-12 grid-r-3 u-round-xs bg-white" style="">
+      <h3 class="my-1 pl-4">Latest blocks</h3>
+      <div class="divider my-0"></div>
+      <table class="table borderless striped">
+        <tbody>
+          for _, block := range vm.Blocks {
+            <tr>
+              <th>{block.Height}</th>
+              <td>
+                <a href="/blocks/{block.id}">{block.ID}</a>
+                From {block.ProducerID}
+              </td>
+              <td>{block.Time}</td>
+              <td>{block.TxCount} txs</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

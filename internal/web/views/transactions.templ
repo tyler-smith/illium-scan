@@ -1,0 +1,48 @@
+package views
+
+import "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+
+templ TransactionsIndex(vm viewmodels.TransactionsIndex){
+
+}
+
+templ TransactionsShow(vm viewmodels.TransactionsShow){
+  <div class="grid u-gap-2">
+    <div class="grid-c-12 grid-r-3 u-round-xs bg-white" style="">
+      <h3 class="my-1 pl-4">Transaction {vm.Transaction.ID}</h3>
+      <p class="my-1 pl-4">In Block: {vm.Transaction.BlockID}</p>
+      <p class="my-1 pl-4">Fee: {vm.Transaction.Fee}</p>
+
+      <h2 class="my-1 pl-4">Outputs</h2>
+      <table class="table my-1 pl-4">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Commitment</th>
+            <th>Ciphertext</th>
+          </tr>
+        </thead>
+        <tbody>
+          for _, output := range vm.Transaction.Outputs {
+            <tr>
+              <td>{output.Index}</td>
+              <td>{output.Commitment}</td>
+              <td>{output.Ciphertext}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <h2 class="my-1 pl-4">Nullifiers</h2>
+      <table class="table my-1 pl-4">
+        <tbody>
+          for _, nullifier := range vm.Transaction.Nullifiers {
+            <tr>
+              <td>{nullifier}</td>
+            </tr>
+          }
+        </tbody>
+        </table>
+    </div>
+  </div>
+}

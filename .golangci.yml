@@ -1,0 +1,7 @@
+# Options for analysis running.
+run:
+  # See the dedicated "run" documentation section.
+  issues-exit-code: 3
+linters:
+  enable:
+    - wrapcheck
