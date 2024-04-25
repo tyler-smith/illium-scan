@@ -51,7 +51,7 @@ type Coinbase struct {
 
 type Stake struct {
 	TransactionID string `db:"transaction_id"`
-	ValidatorID   string `db:"stake_validator_id"`
+	ValidatorID   string `db:"validator_id"`
 	Amount        uint64 `db:"stake_amount"`
 }
 

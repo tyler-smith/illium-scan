@@ -1,3 +1,11 @@
+.PHONY: tailwind-watch
+tailwind-watch:
+	npx tailwindcss -i ./static/css/input.css -o ./static/css/style.css --watch
+
+.PHONY: tailwind-build
+tailwind-build:
+	npx tailwindcss -i ./static/css/input.css -o ./static/css/style.min.css --minify
+
 .PHONY: templ-build
 templ-build: ## Build the templates
 	templ generate
@@ -11,7 +19,7 @@ templ-watch: ## Watch for changes in the templates
 #	 air
 
 .PHONY: build-web
-web: templ-build vet ## Build the web app binary
+web: tailwind-build templ-build ## Build the web app binary
 	go build -o ./bin/ilxweb ./cmd/web/main.go
 
 .PHONY: build-indexer

@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "tailwindcss": "^3.4.3"
+  },
+  "name": "ilxplore",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Tyler Smith",
+  "license": "MIT",
+  "description": "Illium Explorer",
+}

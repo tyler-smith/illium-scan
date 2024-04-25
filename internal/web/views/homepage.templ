@@ -1,27 +1,87 @@
 package views
 
-import "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+
+import (
+    "golang.org/x/text/language"
+    "golang.org/x/text/message"
+
+    "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+)
 
 templ Homepage(vm viewmodels.Homepage) {
-  <div class="grid u-gap-2">
-    <div class="grid-c-12 grid-r-3 u-round-xs bg-white" style="">
-      <h3 class="my-1 pl-4">Latest blocks</h3>
-      <div class="divider my-0"></div>
-      <table class="table borderless striped">
-        <tbody>
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-6">
+        <div class="card bg-white rounded-lg shadow-lg p-6">
+          <p class="text-xl font-bold">Blocks</p>
+          <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
           for _, block := range vm.Blocks {
-            <tr>
-              <th>{block.Height}</th>
-              <td>
-                <a href="/blocks/{block.id}">{block.ID}</a>
-                From {block.ProducerID}
-              </td>
-              <td>{block.Time}</td>
-              <td>{block.TxCount} txs</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+            <div class="p-0.5">
+              <div class="my-1.5 grid grid-cols-12">
+                <div class="col-span-4">
+                  <p>
+                    <span class="text-md">#{block.Height}</span>
+                    <span class="text-md">
+                      <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
+                    </span>
+                  </p>
+                  <p class="text-sm">{block.RelativeAge}</p>
+                </div>
+                <div class="col-span-4">
+                  <p>
+                    <span class="text-md">From</span>
+                    <span class="text-md">
+                      <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{block.ProducerID[:8]}</a>
+                    </span>
+                  </p>
+                  <p class="text-sm">{block.TxCount} transactions</p>
+                </div>
+                <div class="col-span-4">
+                  <p>
+                    <span class="text-md">Fees: 0.23 ilx</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+          <div class="px-6 pt-4 pb-2 text-center">
+            <button
+                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+              Cancel
+            </button>
+            <button
+                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+              Save
+            </button>
+            <button
+                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="col-span-6">
+        <div class="card bg-white rounded-lg shadow-lg p-6">
+            <p class="text-xl font-bold">Validators</p>
+            <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
+            for _, stake := range vm.Stakes {
+              <div class="p-0.5">
+                <div class="my-1.5 grid grid-cols-12">
+                  <div class="col-span-4">
+                    <p>
+                      {stake.ValidatorID[:8]}...{stake.ValidatorID[len(stake.ValidatorID)-8:]}
+                    </p>
+                  </div>
+                  <div class="col-span-4">
+                    <p>
+                      {message.NewPrinter(language.English).Sprintf("%d", stake.Amount)} ilx
+                    </p>
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+        </div>
+      </div>
     </div>
-  </div>
 }

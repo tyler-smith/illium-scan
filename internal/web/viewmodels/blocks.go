@@ -4,17 +4,19 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/maniartech/gotime"
+
 	"github.com/tyler-smith/iexplorer/internal/db/models"
 )
 
 type Block struct {
-	ID         string
-	Height     string
-	ProducerID string
-	Time       string
-	TxCount    string
-	Size       string
-	URL        string
+	ID          string
+	Height      string
+	ProducerID  string
+	Time        string
+	TxCount     string
+	Size        string
+	RelativeAge string
 }
 
 type BlocksIndex struct {
@@ -52,6 +54,7 @@ func blockModelToViewModel(block models.Block) Block {
 		Time:       time.Unix(int64(block.Timestamp), 0).Format(time.DateTime),
 		TxCount:    strconv.Itoa(block.TxCount),
 		Size:       strconv.Itoa(block.Size),
-		URL:        "/blocks/" + block.ID,
+
+		RelativeAge: gotime.TimeAgo(time.Unix(int64(block.Timestamp), 0), time.Now()),
 	}
 }

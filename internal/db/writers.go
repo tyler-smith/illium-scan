@@ -310,6 +310,9 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 			bytesToHex(validatorID),
 			amount,
 		)
+
+		// Add the validator to the table
+
 	case txTypeTreasury:
 		_, err = stmts.insertTreasuryTx.Exec(
 			bytesToHex(id[:]),

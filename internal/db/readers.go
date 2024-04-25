@@ -57,6 +57,16 @@ func GetTransaction(db *sqlx.DB, id string) (models.Transaction, error) {
 	return tx, nil
 }
 
+func GetStakes(db *sqlx.DB, limit int, offset int) ([]models.Stake, error) {
+	ctx := context.Background()
+	stakes := []models.Stake{}
+	err := db.SelectContext(ctx, &stakes, sqlSelectStakes, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	return stakes, nil
+}
+
 const (
 	sqlSelectBlock = `
 SELECT * FROM blocks WHERE id = ? LIMIT 1;
@@ -100,4 +110,15 @@ WHERE transaction_id = ?;
 	sqlSelectTransactionNullifiers = `
 SELECT n.id FROM nullifiers AS n WHERE transaction_id = ?;
 `
+
+	sqlSelectStakes = `
+SELECT s.validator_id, SUM(s.amount) AS stake_amount
+FROM stakes AS s
+         LEFT JOIN transactions AS t ON s.transaction_id = t.id
+         LEFT JOIN blocks AS b ON t.block_id = b.id
+WHERE b.timestamp >= STRFTIME('%s', 'now') - (26 * 7 * 24 * 60 * 60)
+GROUP BY s.validator_id
+ORDER BY stake_amount DESC
+LIMIT ? OFFSET ?
+	`
 )

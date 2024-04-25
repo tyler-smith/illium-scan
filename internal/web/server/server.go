@@ -31,7 +31,7 @@ func New(dbConn db.Connection, assetDir string) *Server {
 }
 
 func registerRoutes(s *Server) {
-	s.ServeMux.HandleFunc("/", s.BlocksIndex)
+	s.ServeMux.HandleFunc("/", s.Homepage)
 	s.ServeMux.HandleFunc("/blocks", s.BlocksIndex)
 	s.ServeMux.HandleFunc("/blocks/{id}", s.BlocksShow)
 	s.ServeMux.HandleFunc("/transactions/{id}", s.TransactionsShow)

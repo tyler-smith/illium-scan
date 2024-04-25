@@ -12,6 +12,23 @@ import (
 	"github.com/tyler-smith/iexplorer/internal/web/views"
 )
 
+func (s *Server) Homepage(w http.ResponseWriter, r *http.Request) {
+	blocks, err := db.GetBlocks(s.dbConn.SQLX(), 30, 0)
+	if err != nil {
+		renderError(w, errors.Wrap(err, "error getting blocks"))
+	}
+
+	stakes, err := db.GetStakes(s.dbConn.SQLX(), 100, 0)
+	if err != nil {
+		renderError(w, errors.Wrap(err, "error getting stakes"))
+	}
+
+	// Render view
+	viewModel := viewmodels.NewHomepage(blocks, stakes)
+	page := views.Homepage(viewModel)
+	render(r.Context(), w, page)
+}
+
 func (s *Server) BlocksIndex(w http.ResponseWriter, r *http.Request) {
 	blocks, err := db.GetBlocks(s.dbConn.SQLX(), 30, 0)
 	if err != nil {
