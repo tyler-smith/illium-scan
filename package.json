@@ -2,10 +2,10 @@
   "dependencies": {
     "tailwindcss": "^3.4.3"
   },
-  "name": "ilxplore",
+  "name": "illiumscan",
   "version": "0.0.1",
   "main": "index.js",
   "author": "Tyler Smith",
   "license": "MIT",
-  "description": "Illium Explorer",
+  "description": "Illium Scan is a tool for scanning the Illium blockchain for transactions and other data."
 }
