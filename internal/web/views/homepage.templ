@@ -5,43 +5,42 @@ import (
     "golang.org/x/text/language"
     "golang.org/x/text/message"
 
-    "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+    "github.com/tyler-smith/iexplorer/internal/db/models"
+    "github.com/tyler-smith/iexplorer/internal/web/helpers"
 )
 
-templ Homepage(vm viewmodels.Homepage) {
+templ Homepage(blocks []models.Block, stakes []models.Stake, proposals []models.TreasuryProposal) {
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-6">
         <div class="card bg-white rounded-lg shadow-lg p-6">
           <p class="text-xl font-bold">Blocks</p>
           <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
-          for _, block := range vm.Blocks {
-            <div class="p-0.5">
-              <div class="my-1.5 grid grid-cols-12">
-                <div class="col-span-4">
-                  <p>
-                    <span class="text-md">#{block.Height}</span>
-                    <span class="text-md">
-                      <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
-                    </span>
-                  </p>
-                  <p class="text-sm">{block.RelativeAge}</p>
+            for _, block := range blocks {
+              <div class="my-1.5 p-0.5 grid grid-cols-12">
+                  <div class="col-span-4">
+                    <p>
+                      <span class="text-md">#{helpers.FormatBlockHeight(block.Height)}</span>
+                      <span class="text-md">
+                        <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
+                      </span>
+                    </p>
+                    <p class="text-sm">{helpers.FormatTimeRelative(block.Timestamp)}</p>
+                  </div>
+                  <div class="col-span-4">
+                    <p>
+                      <span class="text-md">From</span>
+                      <span class="text-md">
+                        <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{helpers.FormatIDShort(block.ProducerID)}</a>
+                      </span>
+                    </p>
+                    <p class="text-sm">{helpers.FormatInt(block.TxCount)} transactions</p>
+                  </div>
+                  <div class="col-span-4">
+                    <p>
+                      <span class="text-md">Fees: {helpers.FormatAmount(block.TotalFees)} ilx</span>
+                    </p>
+                  </div>
                 </div>
-                <div class="col-span-4">
-                  <p>
-                    <span class="text-md">From</span>
-                    <span class="text-md">
-                      <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{block.ProducerID[:8]}</a>
-                    </span>
-                  </p>
-                  <p class="text-sm">{block.TxCount} transactions</p>
-                </div>
-                <div class="col-span-4">
-                  <p>
-                    <span class="text-md">Fees: 0.23 ilx</span>
-                  </p>
-                </div>
-              </div>
-            </div>
             }
           </div>
           <div class="px-6 pt-4 pb-2 text-center">
@@ -64,7 +63,7 @@ templ Homepage(vm viewmodels.Homepage) {
         <div class="card bg-white rounded-lg shadow-lg p-6">
             <p class="text-xl font-bold">Validators</p>
             <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
-            for _, stake := range vm.Stakes {
+            for _, stake := range stakes {
               <div class="p-0.5">
                 <div class="my-1.5 grid grid-cols-12">
                   <div class="col-span-4">
@@ -75,6 +74,29 @@ templ Homepage(vm viewmodels.Homepage) {
                   <div class="col-span-4">
                     <p>
                       {message.NewPrinter(language.English).Sprintf("%d", stake.Amount)} ilx
+                    </p>
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+        </div>
+      </div>
+      <div class="col-span-6">
+        <div class="card bg-white rounded-lg shadow-lg p-6">
+            <p class="text-xl font-bold">Treasury Proposals</p>
+            <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
+            for _, p := range proposals {
+              <div class="p-0.5">
+                <div class="my-1.5 grid grid-cols-12">
+                  <div class="col-span-4">
+                    <p>
+                      {p.ProposalHash[:8]}
+                    </p>
+                  </div>
+                  <div class="col-span-4">
+                    <p>
+                      {helpers.FormatAmount(p.Amount)} ilx
                     </p>
                   </div>
                 </div>

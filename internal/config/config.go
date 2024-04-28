@@ -3,12 +3,12 @@ package config
 import "github.com/tyler-smith/env"
 
 const (
-	envPrefix            = "IEXP_"
+	envPrefix            = "ILXSCAN_"
 	envGRPCServerAddrKey = envPrefix + "GRPC_SERVER_ADDR"
 	envDBDSNKey          = envPrefix + "DB_DSN"
 	envDBDriverKey       = envPrefix + "DB_DRIVER"
 
-	defaultEnvGRPCServerAddr = "0.0.0.0:5002"
+	defaultEnvGRPCServerAddr = "0.0.0.0:5001"
 	defaultEnvDBDSN          = "file:dev.db"
 	defaultEnvDBDriver       = "sqlite3"
 )

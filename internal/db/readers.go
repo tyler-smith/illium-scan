@@ -18,8 +18,7 @@ const (
 func GetBlocks(db *sqlx.DB, limit int, offset int) ([]models.Block, error) {
 	ctx := context.Background()
 	blocks := []models.Block{}
-	q := "SELECT * FROM blocks ORDER BY height DESC LIMIT ? OFFSET ?"
-	err := db.SelectContext(ctx, &blocks, q, limit, offset)
+	err := db.SelectContext(ctx, &blocks, sqlSelectBlocks, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -67,9 +66,50 @@ func GetStakes(db *sqlx.DB, limit int, offset int) ([]models.Stake, error) {
 	return stakes, nil
 }
 
+func GetTreasuryProposals(db *sqlx.DB, limit int, offset int) ([]models.TreasuryProposal, error) {
+	ctx := context.Background()
+	proposals := []models.TreasuryProposal{}
+	err := db.SelectContext(ctx, &proposals, sqlSelectTreasuryProposals, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	return proposals, nil
+}
+
 const (
+	sqlSelectBlocks = `
+SELECT b.id,
+       b.parent_id,
+       b.producer_id,
+       b.txo_root,
+       b.version,
+       b.height,
+       b.timestamp,
+       b.size,
+       b.tx_count,
+       SUM(t.fee) AS total_fees
+FROM blocks AS b
+         LEFT JOIN transactions AS t ON b.id = t.block_id
+GROUP BY b.id
+ORDER BY MIN(height) DESC
+LIMIT ? OFFSET ?
+`
+
 	sqlSelectBlock = `
-SELECT * FROM blocks WHERE id = ? LIMIT 1;
+SELECT b.id,
+       b.parent_id,
+       b.producer_id,
+       b.txo_root,
+       b.version,
+       b.height,
+       b.timestamp,
+       b.size,
+       b.tx_count,
+       SUM(t.fee) AS total_fees
+FROM blocks AS b
+         LEFT JOIN transactions AS t ON b.id = t.block_id
+GROUP BY b.id
+LIMIT 1
 `
 
 	sqlSelectTransaction = `
@@ -120,5 +160,14 @@ WHERE b.timestamp >= STRFTIME('%s', 'now') - (26 * 7 * 24 * 60 * 60)
 GROUP BY s.validator_id
 ORDER BY stake_amount DESC
 LIMIT ? OFFSET ?
-	`
+`
+
+	sqlSelectTreasuryProposals = `
+SELECT tp.proposal_hash, tp.amount, t.id AS transaction_id, b.timestamp
+FROM treasury_proposals AS tp
+         LEFT JOIN transactions AS t ON tp.transaction_id = t.id
+         LEFT JOIN blocks AS b ON t.block_id = b.id
+ORDER BY b.timestamp DESC
+LIMIT ? OFFSET ?
+`
 )

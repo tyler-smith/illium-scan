@@ -1,17 +1,20 @@
 package views
 
-import "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+import (
+    "github.com/tyler-smith/iexplorer/internal/db/models"
+    "github.com/tyler-smith/iexplorer/internal/web/helpers"
+)
 
-templ TransactionsIndex(vm viewmodels.TransactionsIndex){
+templ TransactionsIndex(){
 
 }
 
-templ TransactionsShow(vm viewmodels.TransactionsShow){
+templ TransactionsShow(tx models.Transaction){
   <div class="grid u-gap-2">
     <div class="grid-c-12 grid-r-3 u-round-xs bg-white" style="">
-      <h3 class="my-1 pl-4">Transaction {vm.Transaction.ID}</h3>
-      <p class="my-1 pl-4">In Block: {vm.Transaction.BlockID}</p>
-      <p class="my-1 pl-4">Fee: {vm.Transaction.Fee}</p>
+      <h3 class="my-1 pl-4">Transaction {tx.ID}</h3>
+      <p class="my-1 pl-4">In Block: {tx.BlockID}</p>
+      <p class="my-1 pl-4">Fee: {helpers.FormatUint64(tx.Fee)}</p>
 
       <h2 class="my-1 pl-4">Outputs</h2>
       <table class="table my-1 pl-4">
@@ -23,9 +26,9 @@ templ TransactionsShow(vm viewmodels.TransactionsShow){
           </tr>
         </thead>
         <tbody>
-          for _, output := range vm.Transaction.Outputs {
+          for _, output := range tx.Outputs {
             <tr>
-              <td>{output.Index}</td>
+              <td>{helpers.FormatInt(output.Index)}</td>
               <td>{output.Commitment}</td>
               <td>{output.Ciphertext}</td>
             </tr>
@@ -36,7 +39,7 @@ templ TransactionsShow(vm viewmodels.TransactionsShow){
       <h2 class="my-1 pl-4">Nullifiers</h2>
       <table class="table my-1 pl-4">
         <tbody>
-          for _, nullifier := range vm.Transaction.Nullifiers {
+          for _, nullifier := range tx.Nullifiers {
             <tr>
               <td>{nullifier}</td>
             </tr>

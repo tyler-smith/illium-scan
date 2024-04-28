@@ -23,7 +23,7 @@ const (
 		VALUES (?, ?, ?, ?);`
 
 	sqlInsertNullifier = `
-		INSERT INTO nullifiers (transaction_id, nullifier_id)
+		INSERT INTO nullifiers (transaction_id, id)
 		VALUES (?, ?);`
 
 	sqlInsertCoinbaseTransaction = `

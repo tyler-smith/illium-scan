@@ -1,0 +1,5 @@
+bin
+ci
+design
+*.db
+tmp

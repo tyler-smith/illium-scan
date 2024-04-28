@@ -1,57 +1,60 @@
-package server
+package web
 
 import (
-	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/pkg/errors"
 
 	"github.com/tyler-smith/iexplorer/internal/db"
-	"github.com/tyler-smith/iexplorer/internal/web/viewmodels"
 	"github.com/tyler-smith/iexplorer/internal/web/views"
 )
 
 func (s *Server) Homepage(w http.ResponseWriter, r *http.Request) {
-	blocks, err := db.GetBlocks(s.dbConn.SQLX(), 30, 0)
+	blocks, err := db.GetBlocks(s.db, 30, 0)
 	if err != nil {
 		renderError(w, errors.Wrap(err, "error getting blocks"))
+		return
 	}
 
-	stakes, err := db.GetStakes(s.dbConn.SQLX(), 100, 0)
+	stakes, err := db.GetStakes(s.db, 100, 0)
 	if err != nil {
 		renderError(w, errors.Wrap(err, "error getting stakes"))
+		return
+	}
+
+	proposals, err := db.GetTreasuryProposals(s.db, 100, 0)
+	if err != nil {
+		renderError(w, errors.Wrap(err, "error getting treasury proposals"))
+		return
 	}
 
 	// Render view
-	viewModel := viewmodels.NewHomepage(blocks, stakes)
-	page := views.Homepage(viewModel)
+	page := views.Homepage(blocks, stakes, proposals)
 	render(r.Context(), w, page)
 }
 
 func (s *Server) BlocksIndex(w http.ResponseWriter, r *http.Request) {
-	blocks, err := db.GetBlocks(s.dbConn.SQLX(), 30, 0)
+	blocks, err := db.GetBlocks(s.db, 30, 0)
 	if err != nil {
 		renderError(w, errors.Wrap(err, "error getting blocks"))
+		return
 	}
 
 	// Render view
-	viewModel := viewmodels.NewBlocksIndex(blocks)
-	page := views.BlocksIndex(viewModel)
+	page := views.BlocksIndex(blocks)
 	render(r.Context(), w, page)
 }
 
 func (s *Server) BlocksShow(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-
-	block, err := db.GetBlock(s.dbConn.SQLX(), id)
+	block, err := db.GetBlock(s.db, id)
 	if err != nil {
 		renderError(w, errors.Wrap(err, "error getting block"))
+		return
 	}
 
 	// Render view
-	viewModel := viewmodels.NewBlocksShow(block)
-	page := views.BlocksShow(viewModel)
+	page := views.BlocksShow(block)
 	render(r.Context(), w, page)
 }
 
@@ -62,21 +65,13 @@ func (s *Server) BlocksShow(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) TransactionsShow(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-
-	tx, err := db.GetTransaction(s.dbConn.SQLX(), id)
+	tx, err := db.GetTransaction(s.db, id)
 	if err != nil {
 		renderError(w, errors.Wrap(err, "error getting transaction"))
+		return
 	}
-
-	// debug
-	txJSON, err := json.Marshal(tx)
-	if err != nil {
-		renderError(w, errors.Wrap(err, "error marshalling transaction"))
-	}
-	slog.Debug("transaction", "tx", string(txJSON))
 
 	// Render view
-	viewModel := viewmodels.NewTransactionsShow(tx)
-	page := views.TransactionsShow(viewModel)
+	page := views.TransactionsShow(tx)
 	render(r.Context(), w, page)
 }

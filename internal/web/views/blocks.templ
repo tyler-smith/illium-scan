@@ -1,25 +1,28 @@
 package views
 
-import "github.com/tyler-smith/iexplorer/internal/web/viewmodels"
+import (
+  "github.com/tyler-smith/iexplorer/internal/db/models"
+  "github.com/tyler-smith/iexplorer/internal/web/helpers"
+)
 
-templ BlocksIndex(vm viewmodels.BlocksIndex){
+templ BlocksIndex(blocks []models.Block){
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-6">
         <div class="card bg-white rounded-lg shadow-lg">
           <div class="p-6">
             <p class="text-xl font-bold">Blocks</p>
             <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
-            for _, block := range vm.Blocks {
+            for _, block := range blocks {
               <div class="p-0.5">
                 <div class="my-1.5 grid grid-cols-12">
                   <div class="col-span-4">
                     <p>
-                      <span class="text-md">#{block.Height}</span>
+                      <span class="text-md">#{helpers.FormatBlockHeight(block.Height)}</span>
                       <span class="text-md">
                         <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
                       </span>
                     </p>
-                    <p class="text-sm">{block.RelativeAge}</p>
+                    <p class="text-sm">{helpers.FormatTimeRelative(block.Timestamp)}</p>
                   </div>
                   <div class="col-span-4">
                     <p>
@@ -28,7 +31,7 @@ templ BlocksIndex(vm viewmodels.BlocksIndex){
                         <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{block.ProducerID[:8]}</a>
                       </span>
                     </p>
-                    <p class="text-sm">{block.TxCount} transactions</p>
+                    <p class="text-sm">{helpers.FormatInt(block.TxCount)} transactions</p>
                   </div>
                   <div class="col-span-4">
                     <p>
@@ -80,6 +83,42 @@ templ BlocksIndex(vm viewmodels.BlocksIndex){
     </div>
 }
 
-templ BlocksShow(vm viewmodels.BlocksShow){
-
+templ BlocksShow(block models.Block){
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-4">
+        <div class="card bg-white rounded-lg shadow-lg">
+          <div class="p-6">
+            <p class="text-xl font-bold">Block {helpers.FormatIDShort(block.ID)}</p>
+            <p class="text-sm">Produced {helpers.FormatTimeRelative(block.Timestamp)}</p>
+            <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
+              <div class="my-1.5 p-0.5 grid grid-cols-12">
+                <div class="col-span-4">
+                  <p>
+                    <span class="text-md">#{helpers.FormatBlockHeight(block.Height)}</span>
+                    <span class="text-sm">
+                      <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
+                    </span>
+                  </p>
+                  <p class="text-sm">{helpers.FormatTimeRelative(block.Timestamp)}</p>
+                </div>
+                <div class="col-span-4">
+                  <p>
+                    <span class="text-md">From</span>
+                    <span class="text-md">
+                      <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{helpers.FormatIDShort(block.ProducerID)}</a>
+                    </span>
+                  </p>
+                  <p class="text-sm">{helpers.FormatInt(block.TxCount)} transactions</p>
+                </div>
+                <div class="col-span-4">
+                  <p>
+                    <span class="text-md">Fees: {helpers.FormatAmount(block.TotalFees)} ilx</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 }

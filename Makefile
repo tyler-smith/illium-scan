@@ -14,31 +14,28 @@ templ-build: ## Build the templates
 templ-watch: ## Watch for changes in the templates
 	templ generate --watch
 
-#.PHONY: dev-web
-#dev-web:
-#	 air
-
-.PHONY: build-web
+.PHONY: web
 web: tailwind-build templ-build ## Build the web app binary
-	go build -o ./bin/ilxweb ./cmd/web/main.go
+	go build -o ./bin/ilx-web ./cmd/web/main.go
 
-.PHONY: build-indexer
-indexer: templ-build vet ## Build the indexer binary
-	go build -o ./bin/ilxindexer ./cmd/indexer/main.go
+.PHONY: indexer
+indexer: ## Build the indexer binary
+	go build -o ./bin/ilx-indexer ./cmd/indexer/main.go
 
-.PHONY: build
-build: web indexer ## Build both binaries
+.PHONY: docker-web
+docker-web:  ## Build the web app docker image
+	docker build -t tylersmith/ilx-web -f docker/web.dockerfile .
 
-.PHONY: vet
-vet: ## Run go vet
-	go vet ./...
+.PHONY: docker-indexer
+docker-indexer:  ## Build the indexer docker image
+	docker build -t tylersmith/ilx-indexer -f docker/indexer.dockerfile .
 
 .PHONY: clean
 clean: ## Clean the binaries
-	rm -rf ./bin
+	rm -rf ./bin ./tmp
 
-.PHONY: install-dev-dependencies
-install-dev-dependencies: ## Install dev dependencies
+.PHONY: build-deps
+build-deps: ## Install dev dependencies
 	go install github.com/a-h/templ/cmd/templ@latest
 
 .DEFAULT_GOAL := help

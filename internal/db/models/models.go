@@ -10,6 +10,9 @@ type Block struct {
 	Timestamp  int    `db:"timestamp"`
 	Size       int    `db:"size"`
 	TxCount    int    `db:"tx_count"`
+
+	// Computed
+	TotalFees uint64 `db:"total_fees"`
 }
 
 type Transaction struct {
@@ -31,10 +34,10 @@ type Transaction struct {
 }
 
 type Output struct {
-	//TransactionID string `db:"transaction_id"`
-	OutputIndex int    `db:"output_index"`
-	Commitment  string `db:"commitment"`
-	Ciphertext  string `db:"ciphertext"`
+	TransactionID string `db:"transaction_id"`
+	Index         int    `db:"output_index"`
+	Commitment    string `db:"commitment"`
+	Ciphertext    string `db:"ciphertext"`
 }
 
 //type Nullifier struct {
@@ -58,7 +61,10 @@ type Stake struct {
 type TreasuryProposal struct {
 	TransactionID string `db:"transaction_id"`
 	ProposalHash  string `db:"proposal_hash"`
-	Amount        uint64 `db:"proposal_amount"`
+	Amount        uint64 `db:"amount"`
+
+	// From block
+	Timestamp int `db:"timestamp"`
 }
 
 type Mint struct {

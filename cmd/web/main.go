@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/pkg/errors"
 	"github.com/tyler-smith/env"
 
 	"github.com/tyler-smith/iexplorer/internal/cmd"
 	"github.com/tyler-smith/iexplorer/internal/config"
 	"github.com/tyler-smith/iexplorer/internal/db"
-	"github.com/tyler-smith/iexplorer/internal/web/server"
+	"github.com/tyler-smith/iexplorer/internal/web"
 )
 
 func main() {
@@ -29,17 +32,34 @@ func main() {
 		}
 	}(&dbConn)
 
-	// Create server
+	// Create server handler
 	assetsDir := env.GetString("IEXP_ASSETS_DIR", "./static")
-	s := server.New(dbConn, assetsDir)
+	s, err := web.New(dbConn.SQLX(), assetsDir)
+	if err != nil {
+		slog.Error("error creating server", "err", err)
+		return
+	}
+
+	// Start server
+	srv := http.Server{}
+	srv.Addr = ":3000"
+	srv.Handler = s
 	go func() {
 		slog.Info("listening on http://localhost:3000")
-		err := http.ListenAndServe(":3000", s)
-		if err != nil {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("error listening to server", "err", err)
 			return
 		}
 	}()
 
 	cmd.WaitForExit()
+
+	// Shutdown server
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		slog.Error("error shutting down server", "err", err)
+	}
+
+	slog.Info("server shutdown")
 }

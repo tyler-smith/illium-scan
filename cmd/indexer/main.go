@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"log/slog"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -18,14 +20,15 @@ import (
 	"github.com/tyler-smith/iexplorer/internal/db"
 )
 
-type signalCh chan struct{}
+type doneCh chan struct{}
+type quitCh chan doneCh
 
 func main() {
 	cmd.SetLogger()
 
 	// Get config and connections
 	conf := config.NewFromEnv()
-	sqlDB, err := db.NewWriterConnection(conf.DB)
+	dbConn, err := db.NewWriterConnection(conf.DB)
 	if err != nil {
 		slog.Error("error connecting to database", "err", err)
 		return
@@ -35,31 +38,59 @@ func main() {
 			slog.Error("error closing database connection", "err", err)
 			return
 		}
-	}(sqlDB)
+	}(dbConn)
 
 	// Prepare statements.
-	stmts, err := db.NewCachedWriterStmts(sqlDB)
+	stmts, err := db.NewCachedWriterStmts(dbConn)
 	if err != nil {
 		slog.Error("error preparing statements", "err", err)
 		return
 	}
 
-	start(conf.Indexer, stmts, sqlDB)
-
+	// Run the indexer until we're asked to quit
+	quit := start(conf.Indexer, stmts, dbConn)
 	cmd.WaitForExit()
+
+	// Stop the indexer
+	done := make(doneCh)
+	quit <- done
+	<-done
 }
 
-func start(conf config.Indexer, stmts db.CachedWriterStmts, sqlDB *sql.DB) signalCh {
-	quitCh := make(signalCh)
+func start(conf config.Indexer, stmts db.CachedWriterStmts, sqlDB *sql.DB) quitCh {
+	quit := make(quitCh)
+	errorCount := 0
 	go func() {
 		for {
+			// Stop if we've been asked to quit
+			select {
+			case done := <-quit:
+				close(done)
+				return
+			default:
+			}
+
+			// Connect to the server and wait for notifications
 			err := connectAndWatch(conf, sqlDB, stmts)
+
+			// If we have an error log in, then wait before reconnecting
 			if err != nil {
 				slog.Error("error watching for changes", "err", err)
+
+				errorCount += 1
+				select {
+				case <-time.After(backoffSeconds(errorCount)):
+					continue
+				case done := <-quit:
+					close(done)
+					return
+				}
 			}
+
+			errorCount = 0
 		}
 	}()
-	return quitCh
+	return quit
 }
 
 func connectAndWatch(conf config.Indexer, sqlDB *sql.DB, stmts db.CachedWriterStmts) error {
@@ -68,6 +99,7 @@ func connectAndWatch(conf config.Indexer, sqlDB *sql.DB, stmts db.CachedWriterSt
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 			InsecureSkipVerify: true,
 		})),
+		//grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 	conn, err := grpc.Dial(conf.GRPCServerAddr, grpcOpts...)
 	if err != nil {
@@ -118,7 +150,7 @@ func handleBlockNotification(sqlDB *sql.DB, stmts db.CachedWriterStmts, notifica
 	}
 	defer func() {
 		err := dbTx.Rollback()
-		if !errors.Is(err, sql.ErrTxDone) {
+		if err != nil && !errors.Is(err, sql.ErrTxDone) {
 			slog.Error("error rolling back transaction", "err", err)
 			return
 		}
@@ -130,12 +162,22 @@ func handleBlockNotification(sqlDB *sql.DB, stmts db.CachedWriterStmts, notifica
 	// Insert each transaction.
 	for _, tx := range notification.GetTransactions() {
 		if err := db.InsertTransaction(stmts, header.GetBlock_ID(), tx.GetTransaction()); err != nil {
+			// Seeing the same transaction is not an error.
+			if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
+				slog.Debug("transaction already exists", "id", formatID(tx.GetTransaction().ID().Bytes()))
+				continue
+			}
+
 			return err
 		}
 	}
 
 	// Insert the block.
 	if err := db.InsertBlock(stmts, header); err != nil {
+		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
+			slog.Debug("block already exists", "id", hex.EncodeToString(header.GetBlock_ID()))
+			return nil
+		}
 		return err
 	}
 
@@ -150,4 +192,16 @@ func handleBlockNotification(sqlDB *sql.DB, stmts db.CachedWriterStmts, notifica
 
 func newDBCtx() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 5*time.Second)
+}
+
+func backoffSeconds(errors int) time.Duration {
+	backoff := errors * 2
+	if backoff > 60 {
+		backoff = 60
+	}
+	return time.Duration(backoff) * time.Second
+}
+
+func formatID(id []byte) string {
+	return hex.EncodeToString(id)
 }
