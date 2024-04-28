@@ -17,7 +17,7 @@ type Block struct {
 
 type Transaction struct {
 	ID       string `db:"id"`
-	Type     int    `db:"type"`
+	Type     TxType `db:"type"`
 	BlockID  string `db:"block_id"`
 	TXORoot  string `db:"txo_root"`
 	Locktime int    `db:"locktime"`
@@ -40,10 +40,10 @@ type Output struct {
 	Ciphertext    string `db:"ciphertext"`
 }
 
-//type Nullifier struct {
-//	NullifierID   string `db:"nullifier_id"`
-//	TransactionID string `db:"transaction_id"`
-//}
+type Nullifier struct {
+	ID            string `db:"id"`
+	TransactionID string `db:"transaction_id"`
+}
 
 type Coinbase struct {
 	TransactionID string `db:"transaction_id"`
@@ -54,14 +54,14 @@ type Coinbase struct {
 
 type Stake struct {
 	TransactionID string `db:"transaction_id"`
-	ValidatorID   string `db:"validator_id"`
+	ValidatorID   string `db:"stake_validator_id"`
 	Amount        uint64 `db:"stake_amount"`
 }
 
 type TreasuryProposal struct {
 	TransactionID string `db:"transaction_id"`
 	ProposalHash  string `db:"proposal_hash"`
-	Amount        uint64 `db:"amount"`
+	Amount        uint64 `db:"proposal_amount"`
 
 	// From block
 	Timestamp int `db:"timestamp"`

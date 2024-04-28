@@ -53,8 +53,14 @@ func (s *Server) BlocksShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	txs, err := db.GetTransactionsByBlockID(s.db, id)
+	if err != nil {
+		renderError(w, errors.Wrap(err, "error getting transactions"))
+		return
+	}
+
 	// Render view
-	page := views.BlocksShow(block)
+	page := views.BlocksShow(block, txs)
 	render(r.Context(), w, page)
 }
 

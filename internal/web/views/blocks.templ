@@ -3,122 +3,84 @@ package views
 import (
   "github.com/tyler-smith/iexplorer/internal/db/models"
   "github.com/tyler-smith/iexplorer/internal/web/helpers"
+  "github.com/tyler-smith/iexplorer/internal/web/views/components"
 )
 
 templ BlocksIndex(blocks []models.Block){
+
+}
+
+templ BlocksShow(block models.Block, txs []models.Transaction){
     <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-6">
-        <div class="card bg-white rounded-lg shadow-lg">
-          <div class="p-6">
-            <p class="text-xl font-bold">Blocks</p>
-            <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
-            for _, block := range blocks {
-              <div class="p-0.5">
-                <div class="my-1.5 grid grid-cols-12">
-                  <div class="col-span-4">
-                    <p>
-                      <span class="text-md">#{helpers.FormatBlockHeight(block.Height)}</span>
-                      <span class="text-md">
-                        <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
-                      </span>
-                    </p>
-                    <p class="text-sm">{helpers.FormatTimeRelative(block.Timestamp)}</p>
-                  </div>
-                  <div class="col-span-4">
-                    <p>
-                      <span class="text-md">From</span>
-                      <span class="text-md">
-                        <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{block.ProducerID[:8]}</a>
-                      </span>
-                    </p>
-                    <p class="text-sm">{helpers.FormatInt(block.TxCount)} transactions</p>
-                  </div>
-                  <div class="col-span-4">
-                    <p>
-                      <span class="text-md">Fees: 0.23 ilx</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
+      <div class="col-span-3 card bg-white rounded-lg shadow-lg p-6">
+        <p class="text-xl font-bold">Block #{helpers.FormatBlockHeight(block.Height)} ({helpers.FormatIDShort(block.ID)})</p>
+        <p class="text-sm">Produced {helpers.FormatTimeRelative(block.Timestamp)} by <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{helpers.FormatIDShort(block.ProducerID)}</a></p>
+      </div>
+      <div class="col-span-9 card bg-white rounded-lg shadow-lg p-6">
+        <p class="text-xl font-bold">Transactions</p>
+        <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
+        for _, tx := range txs {
+          <div class="my-1.5 p-0.5 grid grid-cols-12">
+            <p class="col-span-1 text-md">
+              @components.TranasactionTypeBadge(tx.Type)
+            </p>
+            <p class="col-span-11 text-md">
+              <a href={"/transactions/"+ templ.URL(tx.ID)} class="ml-8 text-blue-500">{tx.ID}</a>
+            </p>
+            <div class="col-span-2">
+              <p class="text-md">Inputs: {helpers.FormatInt(len(tx.Nullifiers))}</p>
+              <p class="text-md">Outputs: {helpers.FormatInt(len(tx.Outputs))}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-md">Fee: {helpers.FormatAmount(tx.Fee)} ilx</p>
+              if tx.Type == models.TxTypeStandard {
+                <p class="text-md">Locktime: {helpers.FormatLocktime(tx.Locktime)}</p>
+              }
+            </div>
+            <div class="col-span-8">
+              if tx.Type == models.TxTypeCoinbase {
+                <p class="text-md">Validator: <a href={"/validators/"+ templ.URL(tx.Coinbase.ValidatorID)} class="text-blue-500">{helpers.FormatValidatorIDShort(tx.Coinbase.ValidatorID)}</a></p>
+                <p class="text-md">New Coins: {helpers.FormatAmount(tx.Coinbase.NewCoins)} ilx</p>
+              }
+              else if tx.Type == models.TxTypeStake {
+                <p class="text-md">Validator: <a href={"/validators/"+ templ.URL(tx.Stake.ValidatorID)} class="text-blue-500">{helpers.FormatValidatorIDShort(tx.Stake.ValidatorID)}</a></p>
+                <p class="text-md">Amount: {helpers.FormatAmount(tx.Stake.Amount)} ilx</p>
+              }
+              else if tx.Type == models.TxTypeTreasury {
+                <p class="text-md">Proposal Hash: {tx.TreasuryProposal.ProposalHash}</p>
+                <p class="text-md">Amount: {helpers.FormatAmount(tx.TreasuryProposal.Amount)} ilx</p>
+              }
+              else if tx.Type == models.TxTypeMint {
+                <p class="text-md">Asset: {tx.Mint.AssetID}</p>
+                <p class="text-md">Amount: {helpers.FormatAmount(tx.Mint.NewTokens)} ilx</p>
               }
             </div>
           </div>
-          <div class="px-6 pt-4 pb-2 text-center">
-            <button
-                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-              Cancel
-            </button>
-            <button
-                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-              Save
-            </button>
-            <button
-                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="col-span-6">
-        <div class="bg-white rounded-lg shadow-lg">
-          <h3 class="my-1 pl-4">Latest blocks</h3>
-          <table class="table-auto w-full">
-            <tbody>
-            <!-- Repeat the following block for each row -->
-            <tr>
-              <th class="px-4 py-2">57</th>
-              <td class="px-4 py-2"><a
-                  href="/blocks/0f39caced192d52d45f98b5f4ec66ca5a2a487c1f85b4687deaeb5a03083919b"
-                  class="text-blue-500">0f39caced192d52d45f98b5f4ec66ca5a2a487c1f85b4687deaeb5a03083919b</a>
-                From 002408011220a331f2457b1c6ee6b2a1fd21a921479492c04319d1b94a13215d1be0f6072cd7
-              </td>
-              <td class="px-4 py-2">2024-04-20 17:09:17</td>
-              <td class="px-4 py-2">1 txs</td>
-            </tr>
-            <!-- End of block -->
-            </tbody>
-          </table>
+          }
         </div>
       </div>
     </div>
 }
 
-templ BlocksShow(block models.Block){
-    <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-4">
-        <div class="card bg-white rounded-lg shadow-lg">
-          <div class="p-6">
-            <p class="text-xl font-bold">Block {helpers.FormatIDShort(block.ID)}</p>
-            <p class="text-sm">Produced {helpers.FormatTimeRelative(block.Timestamp)}</p>
-            <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
-              <div class="my-1.5 p-0.5 grid grid-cols-12">
-                <div class="col-span-4">
-                  <p>
-                    <span class="text-md">#{helpers.FormatBlockHeight(block.Height)}</span>
-                    <span class="text-sm">
-                      <a href={"/blocks/"+ templ.URL(block.ID)} class="text-blue-500">{block.ID[:8]}</a>
-                    </span>
-                  </p>
-                  <p class="text-sm">{helpers.FormatTimeRelative(block.Timestamp)}</p>
-                </div>
-                <div class="col-span-4">
-                  <p>
-                    <span class="text-md">From</span>
-                    <span class="text-md">
-                      <a href={"/validators/"+ templ.URL(block.ProducerID)} class="text-blue-500">{helpers.FormatIDShort(block.ProducerID)}</a>
-                    </span>
-                  </p>
-                  <p class="text-sm">{helpers.FormatInt(block.TxCount)} transactions</p>
-                </div>
-                <div class="col-span-4">
-                  <p>
-                    <span class="text-md">Fees: {helpers.FormatAmount(block.TotalFees)} ilx</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-}
+/*
+
+Coinbase:
+  - ValidatorID
+  - NewCoins
+
+Stake:
+  - ValidatorID
+  - Amount
+
+TreasuryProposal
+  - Amount
+  - ProposalHash?
+
+Mint:
+  - AssetID
+  - NewTokens
+  - MintType?
+  - DocumentHash?
+
+
+*/

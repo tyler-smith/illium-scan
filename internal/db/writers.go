@@ -7,6 +7,8 @@ import (
 
 	"github.com/project-illium/ilxd/rpc/pb"
 	"github.com/project-illium/ilxd/types/transactions"
+
+	"github.com/tyler-smith/iexplorer/internal/db/models"
 )
 
 const (
@@ -41,16 +43,6 @@ const (
 	sqlInsertMintTransaction = `
 		INSERT INTO mints (transaction_id, mint_type, asset_id, document_hash, new_tokens, mint_key)
 		VALUES (?, ?, ?, ?, ?, ?);`
-)
-
-type txType int
-
-const (
-	txTypeStandard txType = 0
-	txTypeCoinbase txType = 1
-	txTypeStake    txType = 2
-	txTypeTreasury txType = 3
-	txTypeMint     txType = 4
 )
 
 type CachedWriterStmts struct {
@@ -155,10 +147,6 @@ func (c *CachedWriterStmts) ForTx(tx *sql.Tx) CachedWriterStmts {
 	}
 }
 
-func bytesToHex(b []byte) string {
-	return hex.EncodeToString(b)
-}
-
 func InsertBlock(stmts CachedWriterStmts, block *pb.BlockInfo) error {
 	_, err := stmts.insertBlock.Exec(bytesToHex(block.GetBlock_ID()),
 		bytesToHex(block.GetParent()),
@@ -177,7 +165,7 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 	id := tx.ID()
 
 	var (
-		txtype txType = txTypeStandard
+		txtype models.TxType = models.TxTypeStandard
 
 		// Common transaction properties
 		outputs    []*transactions.Output
@@ -215,7 +203,7 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 		fee = concreteTx.StandardTransaction.GetFee()
 		proof = concreteTx.StandardTransaction.GetProof()
 	case *transactions.Transaction_CoinbaseTransaction:
-		txtype = txTypeCoinbase
+		txtype = models.TxTypeCoinbase
 
 		outputs = concreteTx.CoinbaseTransaction.GetOutputs()
 		proof = concreteTx.CoinbaseTransaction.GetProof()
@@ -223,7 +211,7 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 		signature = concreteTx.CoinbaseTransaction.GetSignature()
 		newCoins = concreteTx.CoinbaseTransaction.GetNewCoins()
 	case *transactions.Transaction_StakeTransaction:
-		txtype = txTypeStake
+		txtype = models.TxTypeStake
 
 		validatorID = concreteTx.StakeTransaction.GetValidator_ID()
 		amount = concreteTx.StakeTransaction.GetAmount()
@@ -233,14 +221,14 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 		signature = concreteTx.StakeTransaction.GetSignature()
 		proof = concreteTx.StakeTransaction.GetProof()
 	case *transactions.Transaction_TreasuryTransaction:
-		txtype = txTypeTreasury
+		txtype = models.TxTypeTreasury
 
 		amount = concreteTx.TreasuryTransaction.GetAmount()
 		outputs = concreteTx.TreasuryTransaction.GetOutputs()
 		proposalHash = concreteTx.TreasuryTransaction.GetProposalHash()
 		proof = concreteTx.TreasuryTransaction.GetProof()
 	case *transactions.Transaction_MintTransaction:
-		txtype = txTypeMint
+		txtype = models.TxTypeMint
 
 		mintType = int32(concreteTx.MintTransaction.GetType())
 		assetID = concreteTx.MintTransaction.GetAsset_ID()
@@ -297,14 +285,14 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 
 	// Insert sub-type specific data.
 	switch txtype {
-	case txTypeCoinbase:
+	case models.TxTypeCoinbase:
 		_, err = stmts.insertCoinbaseTx.Exec(
 			bytesToHex(id[:]),
 			bytesToHex(validatorID),
 			bytesToHex(signature),
 			newCoins,
 		)
-	case txTypeStake:
+	case models.TxTypeStake:
 		_, err = stmts.insertStakeTx.Exec(
 			bytesToHex(id[:]),
 			bytesToHex(validatorID),
@@ -313,13 +301,13 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 
 		// Add the validator to the table
 
-	case txTypeTreasury:
+	case models.TxTypeTreasury:
 		_, err = stmts.insertTreasuryTx.Exec(
 			bytesToHex(id[:]),
 			amount,
 			bytesToHex(proposalHash),
 		)
-	case txTypeMint:
+	case models.TxTypeMint:
 		_, err = stmts.insertMintTx.Exec(
 			bytesToHex(id[:]),
 			mintType,
@@ -334,4 +322,8 @@ func InsertTransaction(stmts CachedWriterStmts, block_id []byte, tx *transaction
 	}
 
 	return nil
+}
+
+func bytesToHex(b []byte) string {
+	return hex.EncodeToString(b)
 }

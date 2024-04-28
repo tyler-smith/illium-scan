@@ -1,0 +1,45 @@
+package components
+
+import (
+  "github.com/tyler-smith/iexplorer/internal/db/models"
+)
+
+templ TranasactionTypeBadge(t models.TxType){
+  switch t {
+    case models.TxTypeStandard:
+      <span
+        class="inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full border border-purple-300 bg-purple-100 px-2 text-sm font-medium text-purple-600"
+      >
+        <i class="fa-solid fa-money-bill-transfer pr-1"></i>
+        Standard
+      </span>
+    case models.TxTypeCoinbase:
+      <span
+        class="inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full border border-purple-300 bg-purple-100 px-2 text-sm font-medium text-purple-600"
+      >
+        <i class="fa-solid fa-coins pr-1"></i>
+        Coinbase
+      </span>
+    case models.TxTypeStake:
+      <span
+        class="inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full border border-purple-300 bg-purple-100 px-2 text-sm font-medium text-purple-600"
+      >
+        <i class="fa-solid fa-lock pr-1"></i>
+        Stake
+      </span>
+    case models.TxTypeMint:
+      <span
+        class="inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full border border-purple-300 bg-purple-100 px-2 text-sm font-medium text-purple-600"
+      >
+        <i class="fa-solid fa-stamp pr-1"></i>
+        Mint
+      </span>
+    case models.TxTypeTreasury:
+      <span
+        class="inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full border border-purple-300 bg-purple-100 px-2 text-sm font-medium text-purple-600"
+      >
+        <i class="fa-solid fa-gavel pr-1"></i>
+        Treasury Proposal
+      </span>
+  }
+}
