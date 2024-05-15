@@ -43,20 +43,6 @@ templ Homepage(blocks []models.Block, stakes []models.Stake, proposals []models.
                 </div>
             }
           </div>
-          <div class="px-6 pt-4 pb-2 text-center">
-            <button
-                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-              Cancel
-            </button>
-            <button
-                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-              Save
-            </button>
-            <button
-                class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
-              Next
-            </button>
-          </div>
         </div>
       </div>
       <div class="col-span-6">
@@ -64,21 +50,19 @@ templ Homepage(blocks []models.Block, stakes []models.Stake, proposals []models.
             <p class="text-xl font-bold">Validators</p>
             <div class="divide-y divide-zinc-400 border-b border-b-zinc-400">
             for _, stake := range stakes {
-              <div class="p-0.5">
-                <div class="my-1.5 grid grid-cols-12">
-                  <div class="col-span-4">
-                    <p>
-                      {stake.ValidatorID[:8]}...{stake.ValidatorID[len(stake.ValidatorID)-8:]}
-                    </p>
-                  </div>
-                  <div class="col-span-4">
-                    <p>
-                      {message.NewPrinter(language.English).Sprintf("%d", stake.Amount)} ilx
-                    </p>
-                  </div>
+              <div class="my-1.5 p-0.5 grid grid-cols-12">
+                <div class="col-span-4">
+                  <p>
+                    {stake.ValidatorID[:8]}...{stake.ValidatorID[len(stake.ValidatorID)-8:]}
+                  </p>
+                </div>
+                <div class="col-span-4">
+                  <p>
+                    {message.NewPrinter(language.English).Sprintf("%d", stake.Amount)} ilx
+                  </p>
                 </div>
               </div>
-              }
+            }
             </div>
         </div>
       </div>
@@ -90,14 +74,10 @@ templ Homepage(blocks []models.Block, stakes []models.Stake, proposals []models.
               <div class="p-0.5">
                 <div class="my-1.5 grid grid-cols-12">
                   <div class="col-span-4">
-                    <p>
-                      {p.ProposalHash[:8]}
-                    </p>
+                    <p>{p.ProposalHash[:8]}</p>
                   </div>
                   <div class="col-span-4">
-                    <p>
-                      {helpers.FormatAmount(p.Amount)} ilx
-                    </p>
+                    <p>{helpers.FormatAmount(p.Amount)} ilx</p>
                   </div>
                 </div>
               </div>

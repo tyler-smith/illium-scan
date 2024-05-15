@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
+    'internal/web/views/*.templ',
     'internal/web/views/**/*.templ'
   ],
   theme: {
@@ -9,9 +10,6 @@ module.exports = {
       'sans': ['Roboto', 'sans-serif'],
       'roboto': ['Roboto', 'sans-serif']
     },
-    // fontSize: {
-    //     base: '14px',
-    // },
     backgroundColor: '#fcfcfd'
   },
   plugins: []
